@@ -30,6 +30,13 @@ After a few seconds, your CPR program will greet the Earth in the standard
 fashion. Run it again for a faster response.
 
 -------------------------------------------------------------------------------
+FEATURES:
+
+Inline::CPR version 0.12 is a minor release:
+
++ Made compatible with Inline 0.41
+
+-------------------------------------------------------------------------------
 INSTALLATION:
 
 This module requires Inline.pm version 0.30 or higher, and the appropriate 

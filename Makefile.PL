@@ -2,7 +2,7 @@ use ExtUtils::MakeMaker;
 WriteMakefile(
 	      NAME => 'Inline::CPR',
 	      VERSION_FROM => 'CPR.pm',
-	      PREREQ_PM => {Inline => '0.31'},
+	      PREREQ_PM => {Inline => '0.41'},
 	      EXE_FILES => ['./script/cpr.pl'],
 	      clean => {FILES => 'examples/ _cpr/ .cpr/'},
 	     );

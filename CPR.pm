@@ -8,7 +8,7 @@ use Config;
 use Carp;
 use Cwd;
 
-$Inline::CPR::VERSION = '0.11';
+$Inline::CPR::VERSION = '0.12';
 @Inline::CPR::ISA = qw(Inline);
 
 #==============================================================================
@@ -32,30 +32,30 @@ sub validate {
 	my ($key, $value) = (shift, shift);
 
 	if ($key eq 'LIBS') {
-	    push(@{$o->{CPR}{makefile}{LIBS}}, 
+	    push(@{$o->{ILSM}{makefile}{LIBS}}, 
 		 (ref $value) ? (@$value) : ($value));
 	    next;
 	}
 	if ($key eq 'INC') {
-	    $o->{CPR}{makefile}{INC} = $value;
+	    $o->{ILSM}{makefile}{INC} = $value;
 	    next;
 	}
 	if ($key eq 'MYEXTLIB') {
-	    $o->{CPR}{makefile}{MYEXTLIB} .= ' ' . $value;
+	    $o->{ILSM}{makefile}{MYEXTLIB} .= ' ' . $value;
 	    next;
 	}
 	if ($key eq 'LDFROM') {
-	    $o->{CPR}{makefile}{LDFROM} = $value;
+	    $o->{ILSM}{makefile}{LDFROM} = $value;
 	    next;
 	}
 	if ($key eq 'TYPEMAPS') {
-	    push(@{$o->{CPR}{makefile}{TYPEMAPS}}, 
+	    push(@{$o->{ILSM}{makefile}{TYPEMAPS}}, 
 		 (ref $value) ? (@$value) : ($value));
 	    next;
 	}
 	if ($key eq 'AUTO_INCLUDE') {
 	    chomp($value);
-	    $o->{CPR}{AUTO_INCLUDE} .= $value . "\n";
+	    $o->{ILSM}{AUTO_INCLUDE} .= $value . "\n";
 	    next;
 	}
 	croak "$key is not a valid config option for CPR\n";
@@ -81,18 +81,18 @@ sub build {
 sub info {
     my $o = shift;
     my $text = '';
-    $o->parse unless $o->{parser};
-    if (defined $o->{parser}{data}{functions}) {
+    $o->parse unless $o->{ILSM}{parser};
+    if (defined $o->{ILSM}{parser}{data}{functions}) {
     }
     else {
-	$text .= "No $o->{language} functions have been successfully bound to Perl.\n\n";
+	$text .= "No $o->{API}{language} functions have been successfully bound to Perl.\n\n";
     }
     return $text;
 }
 
 sub config {
     my $o = shift;
-    $o->{config}{auto_include} ||= <<END;
+    $o->{ILSM}{auto_include} ||= <<END;
 #include "EXTERN.h"
 #include "perl.h"
 #include "XSUB.h"
@@ -106,9 +106,10 @@ END
 sub parse {
     my $o = shift;
 
-#    return if $o->{parser};
+#    return if $o->{ILSM}{parser};
 
-    $o->{code} =~ s!int\s*main\s*\(\s*void\s*\)\s*\{!int cpr_main(void) {!ms;
+    $o->{API}{code} =~ 
+      s!int\s*main\s*\(\s*void\s*\)\s*\{!int cpr_main(void) {!ms;
 
 }
 
@@ -117,16 +118,16 @@ sub parse {
 #==============================================================================
 sub write_XS {
     my $o = shift;
-    my ($pkg, $module, $modfname) = @{$o}{qw(pkg module modfname)};
+    my ($pkg, $module, $modfname) = @{$o->{API}}{qw(pkg module modfname)};
 
-    $o->{CPR}{AUTO_INCLUDE} ||= '';
-    $o->mkpath($o->{build_dir});
-    open XS, "> $o->{build_dir}/$modfname.xs"
+    $o->{ILSM}{AUTO_INCLUDE} ||= '';
+    $o->mkpath($o->{API}{build_dir});
+    open XS, "> $o->{API}{build_dir}/$modfname.xs"
       or croak $!;
     print XS <<END;
-$o->{config}{auto_include}
-$o->{CPR}{AUTO_INCLUDE}
-$o->{code}
+$o->{ILSM}{auto_include}
+$o->{ILSM}{AUTO_INCLUDE}
+$o->{API}{code}
 
 MODULE = $module     	PACKAGE = $pkg
 
@@ -145,7 +146,7 @@ END
 sub write_CPR_headers {
     my $o = shift;
 
-    open HEADER, "> $o->{build_dir}/CPR.h"
+    open HEADER, "> $o->{API}{build_dir}/CPR.h"
       or croak;
 
     print HEADER <<'END';
@@ -161,15 +162,15 @@ END
 sub write_Makefile_PL {
     my $o = shift;
 
-    $o->{CPR}{makefile} ||= {};
+    $o->{ILSM}{makefile} ||= {};
 
     my %options = (
 		   VERSION => '0.00',
-		   %{$o->{CPR}{makefile}},
-		   NAME => $o->{module},
+		   %{$o->{ILSM}{makefile}},
+		   NAME => $o->{API}{module},
 		  );
     
-    open MF, "> $o->{build_dir}/Makefile.PL"
+    open MF, "> $o->{API}{build_dir}/Makefile.PL"
       or croak;
     
     print MF <<END;
@@ -195,7 +196,7 @@ sub compile {
     my ($o, $perl, $make, $cmd, $cwd);
     $o = shift;
     my ($module, $modpname, $modfname, $build_dir, $install_lib) = 
-      @{$o}{qw(module modpname modfname build_dir install_lib)};
+      @{$o->{API}}{qw(module modpname modfname build_dir install_lib)};
 
     -f ($perl = $Config::Config{perlpath})
       or croak "Can't locate your perl binary";
@@ -213,11 +214,11 @@ sub compile {
 	else {
 	    chdir $build_dir;
 	    system($cmd) and do {
-		$o->error_copy;
+#		$o->error_copy;
 		croak <<END;
 
 A problem was encountered while attempting to compile and install your Inline
-$o->{language} code. The command that failed was:
+$o->{API}{language} code. The command that failed was:
   $cmd
 
 The build directory was:
@@ -231,10 +232,8 @@ END
 	}
     }
 
-    if ($o->{config}{CLEAN_AFTER_BUILD} and 
-	not $o->{config}{REPORTBUG}
-       ) {
-	$o->rmpath($o->{config}{DIRECTORY}, $modpname);
+    if ($o->{API}{cleanup}) {
+	$o->rmpath($o->{API}{directory} . '/build/', $modpname);
 	unlink "$install_lib/auto/$modpname/.packlist";
 	unlink "$install_lib/auto/$modpname/$modfname.bs";
 	unlink "$install_lib/auto/$modpname/$modfname.exp"; #MSWin32 VC++
@@ -264,20 +263,21 @@ sub fix_make {
     my (@lines, $fix);
     my $o = shift;
 
-    $o->{installdirs} = 'site';
+    $o->{ILSM}{install_lib} = $o->{API}{install_lib};
+    $o->{ILSM}{installdirs} = 'site';
     
-    open(MAKEFILE, "< $o->{build_dir}Makefile")
+    open(MAKEFILE, "< $o->{API}{build_dir}/Makefile")
       or croak "Can't open Makefile for input: $!\n";
     @lines = <MAKEFILE>;
     close MAKEFILE;
 
-    open(MAKEFILE, "> $o->{build_dir}Makefile")
+    open(MAKEFILE, "> $o->{API}{build_dir}/Makefile")
       or croak "Can't open Makefile for output: $!\n";
     for (@lines) {
 	if (/^(\w+)\s*=\s*\S+.*$/ and
 	    $fix = $fixes{$1}
 	   ) {
-	    print MAKEFILE "$1 = $o->{$fix}\n"
+	    print MAKEFILE "$1 = $o->{ILSM}{$fix}\n"
 	}
 	else {
 	    print MAKEFILE;
