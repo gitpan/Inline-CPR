@@ -8,7 +8,7 @@ use Config;
 use Carp;
 use Cwd;
 
-$Inline::CPR::VERSION = '0.10';
+$Inline::CPR::VERSION = '0.11';
 @Inline::CPR::ISA = qw(Inline);
 
 #==============================================================================
@@ -234,7 +234,7 @@ END
     if ($o->{config}{CLEAN_AFTER_BUILD} and 
 	not $o->{config}{REPORTBUG}
        ) {
-	$o->rmpath($o->{config}{BLIB}, $modpname);
+	$o->rmpath($o->{config}{DIRECTORY}, $modpname);
 	unlink "$install_lib/auto/$modpname/.packlist";
 	unlink "$install_lib/auto/$modpname/$modfname.bs";
 	unlink "$install_lib/auto/$modpname/$modfname.exp"; #MSWin32 VC++

@@ -5,10 +5,11 @@ BEGIN {
 	 todo => [],
 	 onfail => sub {},
 	);
-    mkdir('./cpr_blib', 0777) unless -d './cpr_blib';
+    mkdir('./_cpr', 0777) unless -d './_cpr';
 }
 
-use Inline Config => BLIB => './cpr_blib/';
+use Inline Config => 
+           DIRECTORY => './_cpr/';
 use Inline CPR => <<'END';
 
 int main(void) {

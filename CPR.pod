@@ -73,7 +73,7 @@ users will be familiar with this. (Since your compiled code is cached to disk, s
 
 =item 7
 
-CPR builds and caches your compiled CPR code in the directory C<'./.cpr_blib/'>.
+CPR builds and caches your compiled CPR code in the directory C<'./.cpr/'>.
 
 =item 8
 
@@ -167,7 +167,7 @@ Brian Ingerson <INGY@cpan.org>
 
 =head1 COPYRIGHT
 
-Copyright (c) 2000, Brian Ingerson. All Rights Reserved.  
+Copyright (c) 2001, Brian Ingerson. All Rights Reserved.  
 
 This module is free software. It may be used, redistributed and/or modified under the terms of the Perl Artistic License.
 
